@@ -1,0 +1,35 @@
+﻿<Window x:Class="LevelBarApp.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LevelBarApp.Views"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <ScrollViewer>
+    <StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <Button Margin="10" Content="Connect" Command="{Binding ConnectGeneratorCommand}" HorizontalAlignment="Left"/>
+            <Button Margin="10" Content="Disconnect" Command="{Binding DisconnectGeneratorCommand}" HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <Grid
+          x:Name="mainGrid"
+          HorizontalAlignment="Stretch">
+            <!-- Your LevelBarControls go here -->
+            <ItemsControl ItemsSource="{Binding LevelBars}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel HorizontalAlignment="Stretch" Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <local:LevelBarControl />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </StackPanel>
+    </ScrollViewer>
+</Window>
