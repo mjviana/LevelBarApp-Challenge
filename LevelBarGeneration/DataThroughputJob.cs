@@ -4,18 +4,17 @@
 
 namespace LevelBarGeneration
 {
+    using MathNet.Numerics;
+    using MathNet.Numerics.Distributions;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using MathNet.Numerics;
-    using MathNet.Numerics.Distributions;
-    using Quartz;
 
     /// <summary>
     /// MockClientDataThrptJob class
     /// </summary>
-    public class DataThroughputJob : IJob
+    public class DataThroughputJob
     {
         // Fields
         private static int samplingRate;
@@ -61,11 +60,8 @@ namespace LevelBarGeneration
         /// <see cref="T:Quartz.ITriggerListener" />s that are watching the job's
         /// execution.
         /// </remarks>
-        public Task Execute(IJobExecutionContext context)
+        public Task Execute()
         {
-            // Get job context data.
-            SchedulerContext schedulerContext = context.Scheduler.Context;
-
             // let's not run when there's no data present
             if (levels == null)
             {

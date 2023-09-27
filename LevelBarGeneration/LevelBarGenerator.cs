@@ -6,8 +6,6 @@ namespace LevelBarGeneration
 {
     using System;
     using System.Threading.Tasks;
-    using Quartz;
-    using Quartz.Impl;
 
     /// <summary>
     /// LevelBarGenerator
@@ -15,7 +13,7 @@ namespace LevelBarGeneration
     public class LevelBarGenerator
     {
         // Fields
-        private readonly IScheduler scheduler;
+
         private GeneratorState state = GeneratorState.Stopped;
 
         // Constructor
@@ -25,8 +23,6 @@ namespace LevelBarGeneration
         /// </summary>
         private LevelBarGenerator()
         {
-            StdSchedulerFactory factory = new StdSchedulerFactory();
-            scheduler = factory.GetScheduler().Result;
         }
 
         // Events
@@ -69,28 +65,27 @@ namespace LevelBarGeneration
         /// <returns>Connect Task</returns>
         public async Task Connect()
         {
-            if (scheduler != null)
+
+            if (state == GeneratorState.Running)
             {
-                if (state == GeneratorState.Running)
-                {
-                    Console.WriteLine("Generator is already connected");
-                    return;
-                }
-
-                // What properties are used
-                int channelBlockSize = 512;
-                int samplingRate = 16384;
-                double samplingTime = 1.0d;
-
-                // Setup the channels
-                int numberOfChannels = RegisterChannels();
-
-                // Setup and fire the data generator
-                await SetupDataGenerator(channelBlockSize, samplingRate, samplingTime, numberOfChannels);
-
-                state = GeneratorState.Running;
-                GeneratorStateChanged?.Invoke(this, new GeneratorStateChangedEventArgs { State = GeneratorState.Running });
+                Console.WriteLine("Generator is already connected");
+                return;
             }
+
+            // What properties are used
+            int channelBlockSize = 512;
+            int samplingRate = 16384;
+            double samplingTime = 1.0d;
+
+            // Setup the channels
+            int numberOfChannels = RegisterChannels();
+
+            // Setup and fire the data generator
+            await SetupDataGenerator(channelBlockSize, samplingRate, samplingTime, numberOfChannels);
+
+            state = GeneratorState.Running;
+            GeneratorStateChanged?.Invoke(this, new GeneratorStateChangedEventArgs { State = GeneratorState.Running });
+
         }
 
         /// <summary>
@@ -99,8 +94,6 @@ namespace LevelBarGeneration
         /// <returns>Disconnect Task</returns>
         public async Task Disconnect()
         {
-            await scheduler.DeleteJob(new JobKey("job"));
-
             DeregisterChannels();
 
             state = GeneratorState.Stopped;
@@ -120,22 +113,15 @@ namespace LevelBarGeneration
         private async Task SetupDataGenerator(int channelBlockSize, int samplingRate, double samplingTime, int numberOfChannels)
         {
             DataThroughputJob.SetupJob(samplingRate, channelBlockSize, samplingTime, numberOfChannels);
+            var job = new DataThroughputJob();
+            var interval = TimeSpan.FromMilliseconds((double)(channelBlockSize / 8d) / samplingRate * 1000d);
 
-            await Task.Run(async () =>
+            while (true)
             {
-                IJobDetail throughputJob = JobBuilder.Create<DataThroughputJob>()
-                    .WithIdentity("job")
-                    .Build();
+                await Task.Run(async () => await job.Execute());
 
-                ITrigger throughputTrigger = TriggerBuilder.Create()
-                    .WithIdentity("trigger")
-                    .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMilliseconds((double)(channelBlockSize / 8d) / samplingRate * 1000d)).RepeatForever())
-                    .StartAt(DateTime.Now.AddSeconds(1))
-                    .Build();
-
-                await scheduler.ScheduleJob(throughputJob, throughputTrigger);
-                await scheduler.Start();
-            });
+                await Task.Delay(interval);
+            }
         }
 
         private int RegisterChannels()
