@@ -17,7 +17,7 @@ namespace LevelBarApp.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         // Fields
-        private readonly LevelBarGenerator levelBarGenerator;
+        private readonly ILevelBarGenerator levelBarGenerator;
         private RelayCommand connectToGeneratorCommand;
         private RelayCommand disconnectToGeneratorCommand;
 
@@ -26,9 +26,9 @@ namespace LevelBarApp.ViewModels
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
         /// </summary>
-        public MainWindowViewModel()
+        public MainWindowViewModel(ILevelBarGenerator levelBarGenerator)
         {
-            levelBarGenerator = LevelBarGenerator.Instance;
+            this.levelBarGenerator = levelBarGenerator;
 
             levelBarGenerator.GeneratorStateChanged += LevelBarGenerator_GeneratorStateChanged;
             levelBarGenerator.ChannelAdded += LevelBarGenerator_ChannelAdded;

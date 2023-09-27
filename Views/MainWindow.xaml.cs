@@ -17,16 +17,10 @@ namespace LevelBarApp.Views
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
         /// </summary>
-        public MainWindow()
+        public MainWindow(MainWindowViewModel mainWindowViewModel)
         {
-            DataContext = new MainWindowViewModel();
-
-            //// Retrieve the ViewModel instance from App.xaml resources
-            //var locator = (ViewModelLocator)Application.Current.Resources["Locator"];
-            //DataContext = locator.Main;
             InitializeComponent();
-
-            //AddLevelBarControllers(4);
+            DataContext = mainWindowViewModel;
         }
 
         private void AddLevelBarControllers(int numberOfChannels)

@@ -11,7 +11,7 @@ namespace LevelBarGeneration
     /// <summary>
     /// LevelBarGenerator
     /// </summary>
-    public class LevelBarGenerator
+    public class LevelBarGenerator : ILevelBarGenerator
     {
         // Fields
 
@@ -22,7 +22,7 @@ namespace LevelBarGeneration
         /// <summary>
         /// Prevents a default instance of the <see cref="LevelBarGenerator"/> class from being created.
         /// </summary>
-        private LevelBarGenerator()
+        public LevelBarGenerator()
         {
             cancelTokenSource = new CancellationTokenSource();
             token = cancelTokenSource.Token;
@@ -51,14 +51,6 @@ namespace LevelBarGeneration
         public event EventHandler<GeneratorStateChangedEventArgs> GeneratorStateChanged;
 
         // Properties
-
-        /// <summary>
-        /// Gets the instance.
-        /// </summary>
-        /// <value>
-        /// The instance.
-        /// </value>
-        public static LevelBarGenerator Instance { get; } = new LevelBarGenerator();
 
         CancellationTokenSource cancelTokenSource;
         CancellationToken token;
@@ -120,7 +112,7 @@ namespace LevelBarGeneration
         /// </summary>
         /// <param name="channelIds">The channel ids.</param>
         /// <param name="levels">The levels.</param>
-        internal void ReceiveLevelData(int[] channelIds, float[] levels)
+        public void ReceiveLevelData(int[] channelIds, float[] levels)
         {
             ChannelLevelDataReceived?.Invoke(this, new ChannelDataEventArgs { ChannelIds = channelIds, Levels = levels });
         }
@@ -147,7 +139,7 @@ namespace LevelBarGeneration
                 while (true)
                 {
 
-                    await Task.Run(async () => await job.Execute());
+                    await Task.Run(async () => await job.Execute(this));
 
                     await Task.Delay(interval);
 
@@ -183,5 +175,7 @@ namespace LevelBarGeneration
                 ChannelRemoved?.Invoke(this, new ChannelChangedEventArgs { ChannelId = i });
             }
         }
+
+
     }
 }

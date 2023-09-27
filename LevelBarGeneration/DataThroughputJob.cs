@@ -60,7 +60,7 @@ namespace LevelBarGeneration
         /// <see cref="T:Quartz.ITriggerListener" />s that are watching the job's
         /// execution.
         /// </remarks>
-        public Task Execute()
+        public Task Execute(ILevelBarGenerator levelBarGenerator)
         {
             // let's not run when there's no data present
             if (levels == null)
@@ -75,7 +75,7 @@ namespace LevelBarGeneration
                 jobCounter = 0;
             }
 
-            LevelBarGenerator.Instance.ReceiveLevelData(channelIds, levels[jobCounter]);
+            levelBarGenerator.ReceiveLevelData(channelIds, levels[jobCounter]);
 
             return Task.CompletedTask;
         }

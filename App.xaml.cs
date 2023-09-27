@@ -4,6 +4,11 @@
 
 namespace LevelBarApp
 {
+    using LevelBarApp.ViewModels;
+    using LevelBarApp.Views;
+    using LevelBarGeneration;
+    using Microsoft.Extensions.DependencyInjection;
+    using System;
     using System.Windows;
 
     /// <summary>
@@ -11,6 +16,31 @@ namespace LevelBarApp
     /// </summary>
     public partial class App : Application
     {
+        public static IServiceProvider ServiceProvider { get; private set; }
 
+        //public App()
+        //{
+
+        //}
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            ConfigureServices();
+
+            var mainWindow = ServiceProvider.GetService<MainWindow>();
+            mainWindow.Show();
+
+            base.OnStartup(e);
+        }
+
+        private void ConfigureServices()
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<ILevelBarGenerator, LevelBarGenerator>();
+            services.AddSingleton<MainWindowViewModel>();
+            services.AddSingleton<MainWindow>();
+            ServiceProvider = services.BuildServiceProvider();
+        }
     }
 }

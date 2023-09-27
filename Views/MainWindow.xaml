@@ -16,7 +16,6 @@
         <Grid
           x:Name="mainGrid"
           HorizontalAlignment="Stretch">
-            <!-- Your LevelBarControls go here -->
             <ItemsControl ItemsSource="{Binding LevelBars}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

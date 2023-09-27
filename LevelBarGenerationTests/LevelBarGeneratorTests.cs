@@ -12,7 +12,7 @@ namespace LevelBarGeneration.Tests
         [TestMethod()]
         public async Task ReceiveDataTest()
         {
-            var generatorInstance = LevelBarGenerator.Instance;
+            var generatorInstance = new LevelBarGenerator();
 
             generatorInstance.ChannelLevelDataReceived += GeneratorInstance_ChannelLevelDataReceived;
 
