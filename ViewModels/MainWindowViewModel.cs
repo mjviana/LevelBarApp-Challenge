@@ -52,7 +52,7 @@ namespace LevelBarApp.ViewModels
         /// <value>
         /// The connect generator.
         /// </value>
-        public RelayCommand ConnectGeneratorCommand => connectToGeneratorCommand ?? (connectToGeneratorCommand = new RelayCommand(new System.Action(async () => await levelBarGenerator.Connect())));
+        public RelayCommand ConnectGeneratorCommand => connectToGeneratorCommand ?? new RelayCommand(async () => await levelBarGenerator.Connect());
 
         /// <summary>
         /// Gets the command to disconnect the generator
@@ -60,7 +60,7 @@ namespace LevelBarApp.ViewModels
         /// <value>
         /// The disconnect generator.
         /// </value>
-        public RelayCommand DisconnectGeneratorCommand => disconnectToGeneratorCommand ?? (disconnectToGeneratorCommand = new RelayCommand(new System.Action(async () => await levelBarGenerator.Disconnect())));
+        public RelayCommand DisconnectGeneratorCommand => disconnectToGeneratorCommand ?? new RelayCommand(async () => await levelBarGenerator.Disconnect());
 
         // Methods
         private void LevelBarGenerator_ChannelAdded(object sender, ChannelChangedEventArgs e)
