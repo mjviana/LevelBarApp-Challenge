@@ -5,6 +5,7 @@
 namespace LevelBarGeneration
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -23,6 +24,8 @@ namespace LevelBarGeneration
         /// </summary>
         private LevelBarGenerator()
         {
+            cancelTokenSource = new CancellationTokenSource();
+            token = cancelTokenSource.Token;
         }
 
         // Events
@@ -57,6 +60,9 @@ namespace LevelBarGeneration
         /// </value>
         public static LevelBarGenerator Instance { get; } = new LevelBarGenerator();
 
+        CancellationTokenSource cancelTokenSource;
+        CancellationToken token;
+
         // Methods
 
         /// <summary>
@@ -83,9 +89,15 @@ namespace LevelBarGeneration
             // Setup and fire the data generator
             await SetupDataGenerator(channelBlockSize, samplingRate, samplingTime, numberOfChannels);
 
-            state = GeneratorState.Running;
-            GeneratorStateChanged?.Invoke(this, new GeneratorStateChangedEventArgs { State = GeneratorState.Running });
-
+            if (token.IsCancellationRequested)
+            {
+                ResetCancellationToken();
+            }
+            else
+            {
+                state = GeneratorState.Running;
+                GeneratorStateChanged?.Invoke(this, new GeneratorStateChangedEventArgs { State = GeneratorState.Running });
+            }
         }
 
         /// <summary>
@@ -94,7 +106,10 @@ namespace LevelBarGeneration
         /// <returns>Disconnect Task</returns>
         public async Task Disconnect()
         {
+            cancelTokenSource.Cancel();
+
             DeregisterChannels();
+
 
             state = GeneratorState.Stopped;
             GeneratorStateChanged?.Invoke(this, new GeneratorStateChangedEventArgs { State = GeneratorState.Stopped });
@@ -110,17 +125,42 @@ namespace LevelBarGeneration
             ChannelLevelDataReceived?.Invoke(this, new ChannelDataEventArgs { ChannelIds = channelIds, Levels = levels });
         }
 
+        /// <summary>
+        /// Resets Cancellation token so that can be used again.
+        /// </summary>
+        private void ResetCancellationToken()
+        {
+            Console.WriteLine("Generator was disconnected");
+            cancelTokenSource = new CancellationTokenSource();
+            token = cancelTokenSource.Token;
+        }
+
+
         private async Task SetupDataGenerator(int channelBlockSize, int samplingRate, double samplingTime, int numberOfChannels)
         {
             DataThroughputJob.SetupJob(samplingRate, channelBlockSize, samplingTime, numberOfChannels);
             var job = new DataThroughputJob();
             var interval = TimeSpan.FromMilliseconds((double)(channelBlockSize / 8d) / samplingRate * 1000d);
 
-            while (true)
+            try
             {
-                await Task.Run(async () => await job.Execute());
+                while (true)
+                {
 
-                await Task.Delay(interval);
+                    await Task.Run(async () => await job.Execute());
+
+                    await Task.Delay(interval);
+
+                    token.ThrowIfCancellationRequested();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                cancelTokenSource.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Something went wrong!\n Details: {ex.Message}");
             }
         }
 
