@@ -66,6 +66,10 @@ namespace LevelBarApp.ViewModels
         private void LevelBarGenerator_ChannelAdded(object sender, ChannelChangedEventArgs e)
         {
             System.Console.WriteLine($"Adding channel {e.ChannelId}...");
+
+            //if (LevelBars is null)
+            //    LevelBars = new ObservableCollection<LevelBarViewModel>();
+
             // Generate a LevelBarViewModel
             LevelBars.Add(new LevelBarViewModel { Id = e.ChannelId });
         }
@@ -90,12 +94,11 @@ namespace LevelBarApp.ViewModels
         private void LevelBarGenerator_GeneratorStateChanged(object sender, GeneratorStateChangedEventArgs e)
         {
             if (e.State == GeneratorState.Running)
-            {
-                ConnectGeneratorCommand?.Execute(this);
-            }
+                System.Console.WriteLine("Generator Running!");
             else
             {
-                System.Console.WriteLine("Channel disconneted!");
+                //LevelBars = null;
+                System.Console.WriteLine("Generator Stopped!");
             }
         }
 

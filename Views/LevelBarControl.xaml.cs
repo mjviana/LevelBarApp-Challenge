@@ -47,15 +47,21 @@ namespace LevelBarApp.Views
         {
             this.Dispatcher.Invoke(() =>
             {
+                var linearLevelValue = _levelBarViewModel.Level;
+
                 var levelBarMaxHeight = levelBarContainer.Height;
                 var levelBarHeight = levelBar.Height;
 
                 SetupPeakHoldBackgroundColor(levelBarMaxHeight, levelBarHeight);
 
-                var linearLevelValue = _levelBarViewModel.Level;
                 // convert Linear value to decibel
                 peakValue.Text = (20 * Math.Log10(linearLevelValue)).ToString();
             });
+        }
+
+        private void RemovePeakHoldRefresh()
+        {
+            _timer.Elapsed -= refresh_PeakHold;
         }
 
         private void SetupPeakHoldBackgroundColor(double levelBarMaxHeight, double levelBarHeight)

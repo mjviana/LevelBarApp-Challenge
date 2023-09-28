@@ -55,6 +55,8 @@ namespace LevelBarGeneration
         CancellationTokenSource cancelTokenSource;
         CancellationToken token;
 
+        public GeneratorState State => state;
+
         // Methods
 
         /// <summary>
@@ -85,11 +87,6 @@ namespace LevelBarGeneration
             {
                 ResetCancellationToken();
             }
-            else
-            {
-                state = GeneratorState.Running;
-                GeneratorStateChanged?.Invoke(this, new GeneratorStateChangedEventArgs { State = GeneratorState.Running });
-            }
         }
 
         /// <summary>
@@ -98,13 +95,19 @@ namespace LevelBarGeneration
         /// <returns>Disconnect Task</returns>
         public async Task Disconnect()
         {
+            if (state == GeneratorState.Stopped)
+            {
+                Console.WriteLine("Generator is already stopped");
+                return;
+            }
+
             cancelTokenSource.Cancel();
 
             DeregisterChannels();
 
-
             state = GeneratorState.Stopped;
             GeneratorStateChanged?.Invoke(this, new GeneratorStateChangedEventArgs { State = GeneratorState.Stopped });
+
         }
 
         /// <summary>
@@ -127,7 +130,6 @@ namespace LevelBarGeneration
             token = cancelTokenSource.Token;
         }
 
-
         private async Task SetupDataGenerator(int channelBlockSize, int samplingRate, double samplingTime, int numberOfChannels)
         {
             DataThroughputJob.SetupJob(samplingRate, channelBlockSize, samplingTime, numberOfChannels);
@@ -136,14 +138,20 @@ namespace LevelBarGeneration
 
             try
             {
-                while (true)
+                while (!token.IsCancellationRequested)
                 {
+                    token.ThrowIfCancellationRequested();
+
+                    if (state != GeneratorState.Running && !token.IsCancellationRequested)
+                    {
+                        state = GeneratorState.Running;
+                        GeneratorStateChanged?.Invoke(this, new GeneratorStateChangedEventArgs { State = GeneratorState.Running });
+                    }
 
                     await Task.Run(async () => await job.Execute(this));
 
                     await Task.Delay(interval);
 
-                    token.ThrowIfCancellationRequested();
                 }
             }
             catch (OperationCanceledException)
