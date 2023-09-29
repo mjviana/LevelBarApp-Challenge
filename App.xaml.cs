@@ -18,20 +18,22 @@ namespace LevelBarApp
     {
         public static IServiceProvider ServiceProvider { get; private set; }
 
-        //public App()
-        //{
-
-        //}
-
-        protected override void OnStartup(StartupEventArgs e)
+        public App()
         {
             ConfigureServices();
-
             var mainWindow = ServiceProvider.GetService<MainWindow>();
             mainWindow.Show();
-
-            base.OnStartup(e);
         }
+
+        //protected override void OnStartup(StartupEventArgs e)
+        //{
+        //    ConfigureServices();
+
+        //    var mainWindow = ServiceProvider.GetService<MainWindow>();
+        //    mainWindow.Show();
+
+        //    base.OnStartup(e);
+        //}
 
         private void ConfigureServices()
         {

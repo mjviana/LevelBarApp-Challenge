@@ -14,7 +14,6 @@ namespace LevelBarGeneration.Tests
         [TestMethod()]
         public async Task ConnectTest()
         {
-
             var generatorInstance = new LevelBarGenerator();
 
             generatorInstance.GeneratorStateChanged += GeneratorInstance_GeneratorStateChangedToRunning;
@@ -29,7 +28,6 @@ namespace LevelBarGeneration.Tests
         [TestMethod()]
         public async Task DisconnectTest()
         {
-
             var generatorInstance = new LevelBarGenerator();
 
             generatorInstance.GeneratorStateChanged += GeneratorInstance_GeneratorStateChangedToStopped;
@@ -49,11 +47,12 @@ namespace LevelBarGeneration.Tests
             var generatorInstance = new LevelBarGenerator();
 
             generatorInstance.ChannelLevelDataReceived += GeneratorInstance_ChannelLevelDataReceived;
-            generatorInstance.GeneratorStateChanged += GeneratorInstance_GeneratorStateChangedToRunning;
 
             var connectAction = new Action(async () => await generatorInstance.Connect());
+            var disconnectAction = new Action(async () => await generatorInstance.Disconnect());
 
             connectAction.Invoke();
+            disconnectAction.Invoke();
 
             Assert.IsTrue(dataReceived);
         }

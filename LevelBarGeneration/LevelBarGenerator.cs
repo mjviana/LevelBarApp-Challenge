@@ -16,16 +16,18 @@ namespace LevelBarGeneration
         // Fields
 
         private GeneratorState state = GeneratorState.Stopped;
+        private CancellationTokenSource cancellationTokenSource;
+        private CancellationToken token;
 
         // Constructor
 
         /// <summary>
-        /// Prevents a default instance of the <see cref="LevelBarGenerator"/> class from being created.
+        /// Initializes a new instance of the <see cref="LevelBarGenerator"/> class.
         /// </summary>
         public LevelBarGenerator()
         {
-            cancelTokenSource = new CancellationTokenSource();
-            token = cancelTokenSource.Token;
+            cancellationTokenSource = new CancellationTokenSource();
+            token = cancellationTokenSource.Token;
         }
 
         // Events
@@ -52,9 +54,9 @@ namespace LevelBarGeneration
 
         // Properties
 
-        CancellationTokenSource cancelTokenSource;
-        CancellationToken token;
-
+        /// <summary>
+        /// Gets the Generator State.
+        /// </summary>
         public GeneratorState State => state;
 
         // Methods
@@ -65,7 +67,6 @@ namespace LevelBarGeneration
         /// <returns>Connect Task</returns>
         public async Task Connect()
         {
-
             if (state == GeneratorState.Running)
             {
                 Console.WriteLine("Generator is already connected");
@@ -83,6 +84,7 @@ namespace LevelBarGeneration
             // Setup and fire the data generator
             await SetupDataGenerator(channelBlockSize, samplingRate, samplingTime, numberOfChannels);
 
+            // If a cancelation token is requested, it will reset it's state in order to be used again
             if (token.IsCancellationRequested)
             {
                 ResetCancellationToken();
@@ -101,7 +103,7 @@ namespace LevelBarGeneration
                 return;
             }
 
-            cancelTokenSource.Cancel();
+            cancellationTokenSource.Cancel();
 
             DeregisterChannels();
 
@@ -125,9 +127,8 @@ namespace LevelBarGeneration
         /// </summary>
         private void ResetCancellationToken()
         {
-            Console.WriteLine("Generator was disconnected");
-            cancelTokenSource = new CancellationTokenSource();
-            token = cancelTokenSource.Token;
+            cancellationTokenSource = new CancellationTokenSource();
+            token = cancellationTokenSource.Token;
         }
 
         private async Task SetupDataGenerator(int channelBlockSize, int samplingRate, double samplingTime, int numberOfChannels)
@@ -142,6 +143,7 @@ namespace LevelBarGeneration
                 {
                     token.ThrowIfCancellationRequested();
 
+                    // Notify that the Generator is running
                     if (state != GeneratorState.Running && !token.IsCancellationRequested)
                     {
                         state = GeneratorState.Running;
@@ -151,12 +153,11 @@ namespace LevelBarGeneration
                     await Task.Run(async () => await job.Execute(this));
 
                     await Task.Delay(interval);
-
                 }
             }
             catch (OperationCanceledException)
             {
-                cancelTokenSource.Dispose();
+                cancellationTokenSource.Dispose();
             }
             catch (Exception ex)
             {
@@ -183,7 +184,5 @@ namespace LevelBarGeneration
                 ChannelRemoved?.Invoke(this, new ChannelChangedEventArgs { ChannelId = i });
             }
         }
-
-
     }
 }
