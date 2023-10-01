@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Threading.Tasks;
 
@@ -67,11 +68,94 @@ namespace LevelBarGeneration.Tests
             stateForDisconnectCase = e.State;
         }
 
-
-
         private void GeneratorInstance_ChannelLevelDataReceived(object sender, ChannelDataEventArgs e)
         {
             dataReceived = e.Levels.Length > 0 && e.ChannelIds.Length > 0;
         }
+
+        #region Mock Generator
+
+        [TestMethod]
+        public void GeneratorStateChanged_Event_Should_Be_Raised_With_Running_State()
+        {
+            // Arrange
+            var mockGenerator = new Mock<ILevelBarGenerator>();
+            GeneratorStateChangedEventArgs capturedEventArgs = null;
+            bool eventRaised = false;
+
+            // Act
+            mockGenerator.Object.GeneratorStateChanged += (sender, args) =>
+            {
+                capturedEventArgs = args;
+                eventRaised = true;
+
+            };
+
+            mockGenerator.Raise(g => g.GeneratorStateChanged += null, new GeneratorStateChangedEventArgs { State = GeneratorState.Running });
+
+            // Assert
+
+            Assert.IsNotNull(capturedEventArgs);
+            Assert.IsTrue(GeneratorState.Running == capturedEventArgs.State);
+        }
+
+
+        [TestMethod]
+        public void GeneratorStateChanged_Event_Should_Be_Raised_With_Stopped_State()
+        {
+            // Arrange
+            var mockGenerator = new Mock<ILevelBarGenerator>();
+            GeneratorStateChangedEventArgs capturedEventArgs = null;
+            bool eventRaised = false;
+            int numberOfRaises = 0;
+
+            // Act
+            mockGenerator.Object.GeneratorStateChanged += (sender, args) =>
+            {
+                capturedEventArgs = args;
+                eventRaised = true;
+                numberOfRaises++;
+
+            };
+
+            // First we connect
+            mockGenerator.Raise(g => g.GeneratorStateChanged += null, new GeneratorStateChangedEventArgs { State = GeneratorState.Running });
+
+            // Then we disconnect
+            mockGenerator.Raise(g => g.GeneratorStateChanged += null, new GeneratorStateChangedEventArgs { State = GeneratorState.Stopped });
+
+            // Assert
+            Assert.IsNotNull(capturedEventArgs);
+            Assert.IsTrue(GeneratorState.Stopped == capturedEventArgs.State);
+            Assert.IsTrue(numberOfRaises == 2);
+        }
+
+        [TestMethod]
+        public void ChannelLevelDataReceived_Event_Should_Be_Raised()
+        {
+
+            // Arrange
+            var mockGenerator = new Mock<ILevelBarGenerator>();
+            ChannelDataEventArgs capturedEventArgs = null;
+            bool eventRaised = false;
+            var channelIds = new int[] { 1, 2, 3 };
+            var levels = new float[] { 0.5f, 0.6f, 0.7f };
+
+            // Act
+            mockGenerator.Object.ChannelLevelDataReceived += (sender, args) =>
+            {
+                capturedEventArgs = args;
+                eventRaised = true;
+            };
+
+            mockGenerator.Raise(g => g.ChannelLevelDataReceived += null, new ChannelDataEventArgs() { ChannelIds = channelIds, Levels = levels });
+
+
+            // Assert
+            Assert.IsNotNull(capturedEventArgs);
+            Assert.IsTrue(eventRaised);
+        }
+        #endregion
+
     }
 }
